@@ -3,25 +3,29 @@ import numpy as np
 class Program:
 
     def __init__(self, ctx, camera, vertex_shader, fragment_shader):
-        self.vertex_shader = vertex_shader
-        self.fragment_shader = fragment_shader
-        self.program = ctx.program(vertex_shader=self.vertex_shader, fragment_shader=self.fragment_shader)
+        # create a moderngl program from the provided shaders
+        self.program = ctx.program(vertex_shader=vertex_shader, fragment_shader=fragment_shader)
 
+        # get uniform locations for projection, model, and view matrices
         self.projection_uniform = self.program['projection']
         self.model_uniform = self.program['model']
         self.view_uniform = self.program['view']
         
+        # set initial matrix uniforms
         self.set_defaults(camera)
 
 
     def set_defaults(self, camera):
-        projection_matrix = camera.getProjectionMatrix()
+        # get and update the projection matrix from the camera
+        projection_matrix = camera.get_projection_matrix()
         self.update_projection_matrix(projection_matrix)
 
-        view_matrix = camera.getViewMatrix()
+        # get and update the view matrix from the camera
+        view_matrix = camera.get_view_matrix()
         self.update_view_matrix(view_matrix)
         
-        model_matrix = np.identity(4, dtype=None)
+        # initialize and update the model matrix to an identity matrix
+        model_matrix = np.identity(4, dtype=np.float32)
         self.update_model_matrix(model_matrix)
 
         

@@ -25,10 +25,12 @@ shaders = Program(
     fragment_shader= open("shaders/default.frag", "r").read()
 )
 
-prog = shaders.program
+# get the moderngl program object from the Program wrapper
+prog = shaders.program 
 
+# load the 3d object
 teapot = Object()
-teapot.read_from_obj("models/teapot.obj")
+teapot.read_from_obj("models/teapot.obj") 
 
 
 # Put the array into a VBO
@@ -63,7 +65,7 @@ prog['shininess'].value = shininess
 
 # ------
 
-ctx.enable(moderngl.DEPTH_TEST)  # Enable depth testing for 3D
+ctx.enable(moderngl.DEPTH_TEST)  # enable depth testing for 3D
 
 pygame.mouse.set_visible(False)
 pygame.event.set_grab(True)
@@ -75,21 +77,21 @@ while True:
             pygame.quit()
             sys.exit()
 
-    # Get mouse movement and process it
+    # get mouse movement and process it
     mouse_dx, mouse_dy = pygame.mouse.get_rel()
     camera.process_mouse_movement(mouse_dx, -mouse_dy) # Invert Y-axis
 
-    # Get the state of all keyboard buttons
+    # get the state of all keyboard buttons
     keys = pygame.key.get_pressed()
-    # Process keyboard input for camera movement
+    # process keyboard input for camera movement
     camera.process_keyboard_input(keys)
 
-    # Update the view matrix each frame
-    shaders.update_view_matrix(camera.getViewMatrix())
+    # update the view matrix each frame
+    shaders.update_view_matrix(camera.get_view_matrix())
 
-    # Update camera position uniform for correct specular lighting
+    # update camera position uniform for correct specular lighting
     prog['viewPos'].write(camera.position.tobytes())
 
-    ctx.clear(0.05, 0.05, 0.05, depth=1.0)  # Clear color and depth buffers
+    ctx.clear(0.05, 0.05, 0.05, depth=1.0)  # clear color and depth buffers
     vao.render(moderngl.TRIANGLES)
     pygame.display.flip()
