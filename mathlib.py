@@ -45,6 +45,7 @@ class Vector3:
     
 class Matrix44:
 
+    @staticmethod
     def create_perspective_projection_matrix(fov, aspect, near, far):
         # create a perspective projection matrix
         uh = 1. / np.tan(0.5 * fov * np.pi / 180)
@@ -61,18 +62,19 @@ class Matrix44:
                 (0., 0., fn, 0.)
             ), dtype=np.float32)
 
+    @staticmethod
     def create_look_at_matrix(eye, target, up):
         # create a look-at view matrix
 
         # calculate camera axes
         forward = Vector3.normalize(target - eye)
         side = Vector3.normalize(Vector3.cross(forward, up))
-        up = Vector3.normalize(Vector3.cross(side, forward))
+        up_corrected = Vector3.normalize(Vector3.cross(side, forward))
 
         # construct the view matrix
         return np.array((
-                (side.x, up.x, -forward.x, 0.),
-                (side.y, up.y, -forward.y, 0.),
-                (side.z, up.z, -forward.z, 0.),
-                (-Vector3.dot(side, eye), -Vector3.dot(up, eye), Vector3.dot(forward, eye), 1.0)
+                (side.x, up_corrected.x, -forward.x, 0.),
+                (side.y, up_corrected.y, -forward.y, 0.),
+                (side.z, up_corrected.z, -forward.z, 0.),
+                (-Vector3.dot(side, eye), -Vector3.dot(up_corrected, eye), Vector3.dot(forward, eye), 1.0)
             ), dtype=np.float32)

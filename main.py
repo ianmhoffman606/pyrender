@@ -1,18 +1,18 @@
 import moderngl
-import sys
-import pygame
+import glfw
 
 from camera import Camera
 from object import Object
 from program import Program
 from mathlib import Vector3
 
-pygame.init()
-
 WINDOW_WIDTH = 1280
 WINDOW_HEIGHT = 720
 ASPECT_RATIO = WINDOW_WIDTH / WINDOW_HEIGHT
-pygame.display.set_mode((WINDOW_WIDTH, WINDOW_HEIGHT), flags=pygame.OPENGL | pygame.DOUBLEBUF, vsync=True)
+
+glfw.init()
+window = glfw.create_window(WINDOW_WIDTH, WINDOW_HEIGHT, "PyRender", None, None)
+glfw.make_context_current(window)
 
 ctx = moderngl.get_context()
 
@@ -31,7 +31,6 @@ prog = shaders.program
 # load the 3d object
 teapot = Object()
 teapot.read_from_obj("models/teapot.obj") 
-
 
 # Put the array into a VBO
 vbo = ctx.buffer(teapot.vertex_data.astype('f4').tobytes())
@@ -67,31 +66,34 @@ prog['shininess'].value = shininess
 
 ctx.enable(moderngl.DEPTH_TEST)  # enable depth testing for 3D
 
-pygame.mouse.set_visible(False)
-pygame.event.set_grab(True)
+glfw.set_input_mode(window, glfw.CURSOR, glfw.CURSOR_DISABLED)
 
-while True:
+last_x, last_y = WINDOW_WIDTH / 2, WINDOW_HEIGHT / 2
+first_mouse = True
 
-    for event in pygame.event.get():
-        if event.type == pygame.QUIT:
-            pygame.quit()
-            sys.exit()
+while glfw.window_should_close(window) == False:
+    glfw.poll_events()
 
-    # get mouse movement and process it
-    mouse_dx, mouse_dy = pygame.mouse.get_rel()
-    camera.process_mouse_movement(mouse_dx, -mouse_dy) # Invert Y-axis
+    xpos, ypos = glfw.get_cursor_pos(window)
+    if first_mouse:
+        last_x = xpos
+        last_y = ypos
+        first_mouse = False
+
+    xoffset = xpos - last_x
+    yoffset = last_y - ypos  # reversed since Y-coordinates go from bottom to top
+    last_x = xpos
+    last_y = ypos
+    camera.process_mouse_movement(xoffset, yoffset)
 
     # get the state of all keyboard buttons
-    keys = pygame.key.get_pressed()
-    # process keyboard input for camera movement
-    camera.process_keyboard_input(keys)
+    camera.process_keyboard_input(window)
 
     # update the view matrix each frame
     shaders.update_view_matrix(camera.get_view_matrix())
 
     # update camera position uniform for correct specular lighting
     prog['viewPos'].write(camera.position.tobytes())
-
     ctx.clear(0.05, 0.05, 0.05, depth=1.0)  # clear color and depth buffers
     vao.render(moderngl.TRIANGLES)
-    pygame.display.flip()
+    glfw.swap_buffers(window)

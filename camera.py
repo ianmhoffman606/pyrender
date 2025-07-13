@@ -1,6 +1,6 @@
-import pygame
 import math
 import sys
+import glfw
 
 from mathlib import Vector3, Matrix44
 
@@ -58,35 +58,34 @@ class Camera:
         # moves the camera position by a given vector scaled by movement speed
         self.position += vector * self.movement_speed
 
-    def process_keyboard_input(self, keys):
+    def process_keyboard_input(self, window):
         # handles keyboard input for camera movement and exiting the application
-        if keys[pygame.K_ESCAPE]:
-            pygame.quit()
-            sys.exit()
+        if glfw.get_key(window, glfw.KEY_ESCAPE) == glfw.PRESS:
+            glfw.set_window_should_close(window, True)
 
         # project the look vector onto the xz plane for horizontal movement
         forward_on_plane = Vector3([self.look.x, 0.0, self.look.z])
         forward = forward_on_plane.normalize()
 
-        # calculate the right vector for strafing
-        right = forward.cross(self.up)
+        # calculate the right vector for strafing, ensuring it's orthogonal to the up vector
+        right = forward.cross(self.up).normalize()
 
         # determine movement direction based on key presses
         move_direction = Vector3([0.0, 0.0, 0.0])
-        if keys[pygame.K_w]:
+        if glfw.get_key(window, glfw.KEY_W) == glfw.PRESS:
             move_direction += forward
-        if keys[pygame.K_s]:
+        if glfw.get_key(window, glfw.KEY_S) == glfw.PRESS:
             move_direction -= forward
-        if keys[pygame.K_a]:
+        if glfw.get_key(window, glfw.KEY_A) == glfw.PRESS:
             # negate right vector for left movement
             move_direction -= right 
-        if keys[pygame.K_d]:
+        if glfw.get_key(window, glfw.KEY_D) == glfw.PRESS:
             move_direction += right
 
         # vertical movement along the world y-axis
-        if keys[pygame.K_SPACE]:
+        if glfw.get_key(window, glfw.KEY_SPACE) == glfw.PRESS:
             move_direction.y += 1.0
-        if keys[pygame.K_LSHIFT]:
+        if glfw.get_key(window, glfw.KEY_LEFT_SHIFT) == glfw.PRESS:
             move_direction.y -= 1.0
 
         # apply the calculated movement to the camera

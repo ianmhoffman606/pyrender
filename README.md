@@ -1,6 +1,6 @@
 # Python 3D Renderer
 
-A simple 3D rendering engine built with Python, ModernGL, and Pygame. This project demonstrates loading a 3D model (`.obj` format) and rendering it with a dynamic Blinn-Phong lighting model. It features a first-person fly-through camera for scene navigation.
+A simple 3D rendering engine built with Python, ModernGL, and GLFW. This project demonstrates loading a 3D model (`.obj` format) and rendering it with a dynamic Blinn-Phong lighting model. It features a first-person fly-through camera for scene navigation.
 
 
 
@@ -21,7 +21,7 @@ A simple 3D rendering engine built with Python, ModernGL, and Pygame. This proje
 
 1.  Clone the repository:
     ```sh
-    git clone <your-repo-url>
+    git clone https://github.com/ianmhoffman606/pyrender.git
     cd graphrender
     ```
 
@@ -67,14 +67,12 @@ pyrender/
 
 Here are some planned improvements:
 
--   [ ] Replace Pygame with a more modern windowing library like GLFW.
--   [ ] Optimize by removing the NumPy dependency and using native Python structures or `struct`.
 -   [ ] Write a custom `.obj` parser to remove the `pywavefront` dependency.
 -   [ ] Implement post-processing effects using framebuffers.
 
 ## Built With
 
 -   ModernGL - Modern OpenGL bindings for Python
--   Pygame - Windowing and event handling
+-   glfw - Windowing and event handling
 -   NumPy - Vector and matrix operations
 -   PyWavefront - `.obj` file loading
