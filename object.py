@@ -1,4 +1,3 @@
-import pywavefront
 import numpy as np
 
 class Object:
@@ -8,54 +7,67 @@ class Object:
         self.vertices = []
 
     def read_from_obj(self, filename):
-        # read object data from .obj file
-        data = pywavefront.Wavefront(filename, cache=True, parse=True)
-        obj = data.materials.popitem()[1]
-        self.vertices = obj.vertices
-        self.vertex_data = self.calculate_vertex_normals()
+        indices = []
+        with open(filename, 'r') as f:
+            for line in f:
+                if line.startswith('v '):
+                    parts = line.split()
+                    self.vertices.append([float(parts[1]), float(parts[2]), float(parts[3])])
+                elif line.startswith('f '):
+                    # OBJ indices are 1-based. We extract the vertex index only.
+                    parts = line.split()[1:]
+                    face_indices = [int(p.split('/')[0]) - 1 for p in parts]
+                    # assuming triangles; if quads, you'd need to triangulate here
+                    indices.append(face_indices)
+        # calculate normals and produce shared per-vertex arrays + triangle indices
+        self.vertex_data, self.indices = self.calculate_vertex_normals(indices)
 
-    def calculate_vertex_normals(self):
+
+    def calculate_vertex_normals(self, indices):
         # reshape the flat list of vertices into an array of shape (N/3, 3)
         verts = np.array(self.vertices, dtype=np.float32).reshape(-1, 3)
 
-        # a dictionary to map vertex coordinates (as tuples) to their accumulated normal.
-        # using tuples as dict keys because numpy arrays are not hashable.
-        normal_accumulator = {}
+        # weld duplicate vertices by position (quantize to avoid tiny FP differences)
+        quant = np.round(verts, decimals=6)
+        unique_verts, inverse = np.unique(quant, axis=0, return_inverse=True)
 
-        # iterate over triangles to calculate face normals and accumulate them for each vertex.
-        for i in range(0, len(verts), 3):
-            # Get the vertices of the triangle
-            v1, v2, v3 = verts[i], verts[i+1], verts[i+2]
+        # accumulate normals per unique vertex (averaged face normals)
+        normals = np.zeros_like(unique_verts)
 
-            # calculate two edges of the triangle
+        # triangulate faces (handle n-gons by fan triangulation) and map to unique verts
+        triangles = []
+        for face in indices:
+            if len(face) == 3:
+                triangles.append([inverse[face[0]], inverse[face[1]], inverse[face[2]]])
+            elif len(face) > 3:
+                for i in range(1, len(face) - 1):
+                    triangles.append([inverse[face[0]], inverse[face[i]], inverse[face[i + 1]]])
+
+        for tri in triangles:
+            v1_idx, v2_idx, v3_idx = tri
+            v1 = unique_verts[v1_idx]
+            v2 = unique_verts[v2_idx]
+            v3 = unique_verts[v3_idx]
+
             edge1 = v2 - v1
             edge2 = v3 - v1
-            
-            # the face normal is the cross product of the two edges.
             face_normal = np.cross(edge1, edge2)
-            
-            # skip degenerate triangles
-            if np.allclose(face_normal, 0):
-                continue
-            
-            # add this face normal to the accumulator for each of the three vertices.
-            for v in [v1, v2, v3]:
-                v_tuple = tuple(v)
-                normal_accumulator.setdefault(v_tuple, np.zeros(3, dtype=np.float32))
-                normal_accumulator[v_tuple] += face_normal
-        
-        # normalize the accumulated normals for each unique vertex.
-        for v_tuple in normal_accumulator:
-            normal = normal_accumulator[v_tuple]
-            norm_len = np.linalg.norm(normal)
-            if norm_len > 0:
-                normal_accumulator[v_tuple] = normal / norm_len
-        
-        # create the final interleaved vertex data array by looking up the smooth normal for each vertex.
-        interleaved_data = np.empty((verts.shape[0], 6), dtype=np.float32)
-        for i, v in enumerate(verts):
-            interleaved_data[i, :3] = v
-            interleaved_data[i, 3:] = normal_accumulator[tuple(v)]
-        
-        # flatten the interleaved array for the VBO
-        return interleaved_data.flatten()
+
+            normals[v1_idx] += face_normal
+            normals[v2_idx] += face_normal
+            normals[v3_idx] += face_normal
+
+        # normalize the accumulated vectors
+        norms = np.linalg.norm(normals, axis=1, keepdims=True)
+        normals = np.divide(normals, norms, out=np.zeros_like(normals), where=norms!=0)
+
+        # build interleaved per-vertex data (shared unique vertices)
+        per_vertex = np.hstack((unique_verts, normals))  # shape (V,6)
+
+        # create triangle index list (flattened)
+        if len(triangles) == 0:
+            return per_vertex.astype(np.float32).flatten(), np.array([], dtype=np.uint32)
+
+        tri_indices = np.array(triangles, dtype=np.uint32).flatten()
+
+        return per_vertex.astype(np.float32).flatten(), tri_indices

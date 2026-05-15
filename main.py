@@ -32,9 +32,11 @@ prog = shaders.program
 teapot = Object()
 teapot.read_from_obj("models/teapot.obj") 
 
-# Put the array into a VBO
+# Put the vertex array into a VBO and triangle indices into an IBO so shared
+# vertices keep consistent normals (no seams from duplicated vertices).
 vbo = ctx.buffer(teapot.vertex_data.astype('f4').tobytes())
-vao = ctx.vertex_array(prog, [(vbo, '3f 3f', 'in_vert', 'in_normals')])
+ibo = ctx.buffer(teapot.indices.astype('u4').tobytes())
+vao = ctx.vertex_array(prog, [(vbo, '3f 3f', 'in_vert', 'in_normals')], index_buffer=ibo)
 
 # blinn phong uniforms
 
