@@ -9,7 +9,7 @@ A simple 3D rendering engine built with Python, ModernGL, and GLFW. This project
 -   **ModernGL Rendering:** Utilizes ModernGL for efficient, modern OpenGL rendering.
 -   **First-Person Camera:** Navigate the scene with classic WASD, space/shift, and mouse controls.
 -   **Blinn-Phong Lighting:** Dynamic lighting that responds to camera and light source positions.
--   **OBJ Model Loading:** Loads vertex data from `.obj` files using `pywavefront`.
+-   **OBJ Model Loading:** Loads vertex data from `.obj` files using custom parser.
 
 
 ## Prerequisites
