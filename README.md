@@ -67,7 +67,7 @@ pyrender/
 
 Here are some planned improvements:
 
--   [ ] Write a custom `.obj` parser to remove the `pywavefront` dependency.
+-   [x] Write a custom `.obj` parser to remove the `pywavefront` dependency.
 -   [ ] Implement post-processing effects using framebuffers.
 
 ## Built With
@@ -75,4 +75,3 @@ Here are some planned improvements:
 -   ModernGL - Modern OpenGL bindings for Python
 -   glfw - Windowing and event handling
 -   NumPy - Vector and matrix operations
--   PyWavefront - `.obj` file loading

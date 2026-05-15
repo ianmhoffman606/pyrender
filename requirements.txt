@@ -1,4 +1,3 @@
 moderngl
 glfw
 numpy
-pywavefront
