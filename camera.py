@@ -1,5 +1,4 @@
 import math
-import sys
 import glfw
 
 from mathlib import Vector3, Matrix44
